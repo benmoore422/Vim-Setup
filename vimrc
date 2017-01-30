@@ -41,4 +41,7 @@ let g:syntastic_check_on_wq = 0
 " Abreviations definitel add a few of these 
 ab #i  #include <
 ab iio #include <stdio.h>
+ab main int main(int argc char **argv)
 
+" Nerd tree shortcuts
+map <C-n> :NERDTreeToggle<CR>
