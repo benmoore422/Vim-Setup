@@ -17,31 +17,66 @@
 
 
 
-
 "======================================================
 " 1) functions ----------------------------------------
 "======================================================
 
 
+" Open and close syntastic
 function! ToggleCompileErrors()
-				:if g:syntastic_is_open 
-								:call SyntasticReset()
-								let g:syntastic_is_open = 0
-				:else
-								:call SyntasticCheck()
-								let g:syntastic_is_open = 1
-				:endif
+    if !exists('b:syntastic_is_open')
+        :call SyntasticCheck()
+        let b:syntastic_is_open = 1
+    else
+        :call SyntasticReset()
+        unlet b:syntastic_is_open
+    endif
 endfunction
 
 " Check operatint system for OS dependant code
 function! CheckOperatingSystem()
-				let g:OS = 'linux'
-				let os = substitute(system('uname'), '\n', '', '')
-				:if os == 'Darwin' || os == 'Mac'
-								let g:OS = 'osx'
-				:endif
+    let g:OS = 'linux'
+    let os = substitute(system('uname'), '\n', '', '')
+    if os == 'Darwin' || os == 'Mac'
+        let g:OS = 'osx'
+    endif
 endfunction
 
+" An experimental folds mode i'm playing with
+function! ToggleFoldsMode()
+    if !exists('b:foldsMode')
+        let b:foldsMode = 1
+        set foldmethod=syntax
+        set foldenable
+    else
+        unlet b:foldsMode
+        " set nofoldenable  " turn off folds
+    endif
+endfunction
+
+function! DefaultWorkspace()
+    " Rough number of columns to decide between laptop and big monitor screens
+    let numcol = 2
+
+    if winwidth(0) >= 220
+        let numcol = 3
+    endif
+
+    if numcol == 3
+        e term://zsh
+        file Shell\ Two
+        vnew
+    endif
+
+    vsp term://~/workspace
+    file Context
+    sp term://zsh
+    file Shell\ One
+    wincmd k
+    "resize 4
+    resize 8
+    wincmd h
+endfunction
 
 "======================================================
 
@@ -76,8 +111,6 @@ set smarttab
 " Set leader key
 let mapleader = "\<Space>"
 
-let g:syntastic_is_open = 0 " for toggle compiler errors func 
-
 " Allow vim to find coloscheme 
 set rtp+=~/.vim/bundle/vim-colorscheme-primary
 
@@ -86,11 +119,11 @@ set clipboard=unnamed
 
 filetype plugin indent on
 
-" > Setup backup/swap/undo
-" ========================
+" Setup backup/swap/undo
 if !isdirectory($HOME . '/.vim/.backup')
     silent !mkdir -p ~/.vim/.backup >/dev/null 2>&1
 endif
+
 set backupdir-=.
 set backupdir+=.
 set backupdir-=~/
@@ -269,9 +302,10 @@ let g:airline#extensions#ctrlp#color_template = 'replace'
 
 
 command ToggleCompileErrors :call ToggleCompileErrors()
+command ToggleFoldsMode :call ToggleFoldsMode()
+command DefaultWorkspace :call DefaultWorkspace()
 command VerticalTerm vsplit <bar> terminal
 command HorizontalTerm split <bar> terminal
-
 "======================================================
 
 
@@ -288,6 +322,15 @@ nnoremap <C-J> <C-W><C-J>
 nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
+
+" Easier mapping for terminal window navigation
+tnoremap <C-h> <C-\><C-N><C-w>h
+tnoremap <C-j> <C-\><C-N><C-w>j
+tnoremap <C-k> <C-\><C-N><C-w>k
+tnoremap <C-l> <C-\><C-N><C-w>l
+
+" Map Escape to exit terminal mode
+tnoremap <Esc> <C-\><C-n>
 
 " Resize panes
 nnoremap <silent> <C-w>h 5<C-w><
@@ -333,11 +376,22 @@ nnoremap <C-9> <Plug>AirlineSelectTab9
 nnoremap <Leader>q <Plug>AirlineSelectPrevTab
 nnoremap <Leader>e <Plug>AirlineSelectNextTab
 
-" new tab
-nnoremap <silent> <Leader>t :tabnew <Space>
+" new terminal vertical
+"nnoremap <silent> <Leader>t :vsp | :term <CR>
+
+" new terminal horizontal
+"nnoremap <silent> <Leader>T :sp | :term <CR>
 
 " Toggle syntastic window
 nnoremap <silent> <Leader>b :ToggleCompileErrors<CR>
+
+
+" Folds mode
+nnoremap <expr> j exists('b:foldsMode') ? 'zj' : 'j'
+nnoremap <expr> k exists('b:foldsMode') ? 'zk' : 'k'
+nnoremap <expr> o exists('b:foldsMode') ? 'zo' : 'o'
+nnoremap <expr> c exists('b:foldsMode') ? 'zc' : 'c'
+nnoremap <expr> M exists('b:foldsMode') ? 'zM' : 'M'
 
 
 "======================================================
@@ -349,7 +403,7 @@ nnoremap <silent> <Leader>b :ToggleCompileErrors<CR>
 
 ab #i  #include <
 ab iio #include <stdio.h>
-ab _int main(int argc, char **argv)
+ab _int int main(int argc, char **argv)
 ab #d #define
 
-"------------------------------------------------------
+"======================================================
